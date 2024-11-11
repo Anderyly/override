@@ -6,12 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
-	"golang.org/x/net/http2"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -19,7 +16,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
-    "math/rand"
+
+	"github.com/gin-gonic/gin"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
+	"golang.org/x/net/http2"
 )
 
 const DefaultInstructModel = "gpt-3.5-turbo-instruct"
@@ -191,7 +192,7 @@ func AuthMiddleware(authToken string) gin.HandlerFunc {
 }
 
 func (s *ProxyService) InitRoutes(e *gin.Engine) {
-	e.GET("/_ping", s.pong)
+	e.GET("/v1/_ping", s.pong)
 	e.GET("/models", s.models)
 	e.GET("/v1/models", s.models)
 	authToken := s.cfg.AuthToken // replace with your dynamic value as needed
@@ -478,7 +479,7 @@ func (s *ProxyService) completions(c *gin.Context) {
 }
 
 func contains(arr []string, str string) bool {
-    return strings.Contains(strings.Join(arr, ","), str)
+	return strings.Contains(strings.Join(arr, ","), str)
 }
 
 func (s *ProxyService) codeCompletions(c *gin.Context) {
@@ -506,7 +507,7 @@ func (s *ProxyService) codeCompletions(c *gin.Context) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer " + getRandomApiKey(s.cfg.CodexApiKey))
+	req.Header.Set("Authorization", "Bearer "+getRandomApiKey(s.cfg.CodexApiKey))
 	if "" != s.cfg.CodexApiOrganization {
 		req.Header.Set("OpenAI-Organization", s.cfg.CodexApiOrganization)
 	}
@@ -547,12 +548,12 @@ func (s *ProxyService) codeCompletions(c *gin.Context) {
 
 // 随机取一个apiKey
 func getRandomApiKey(paramStr string) string {
-    params := strings.Split(paramStr, ",")
-    rand.Seed(time.Now().UnixNano())
-    randomIndex := rand.Intn(len(params))
+	params := strings.Split(paramStr, ",")
+	rand.Seed(time.Now().UnixNano())
+	randomIndex := rand.Intn(len(params))
 	fmt.Println("Code completion API Key index:", randomIndex)
 	fmt.Println("Code completion API Key:", strings.TrimSpace(params[randomIndex]))
-    return strings.TrimSpace(params[randomIndex])
+	return strings.TrimSpace(params[randomIndex])
 }
 
 func ConstructRequestBody(body []byte, cfg *config) []byte {
